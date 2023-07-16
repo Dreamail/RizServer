@@ -4,7 +4,7 @@
     {
         /*
          Warning: If you want to use RizServerCoreSharp, 
-         you should create a separate C# project and reference this namespace instead of directly modifying it. 
+         you should create a separate C# project and reference this namespace and run GlobalConfig.InitCore() at first instead of directly modifying it. 
          This Main function is just for running tests.
         */
 
