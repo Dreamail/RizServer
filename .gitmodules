@@ -1,0 +1,3 @@
+[submodule "RizServerCore/OspDB"]
+	path = RizServerCore/OspDB
+	url = https://github.com/osp-project/osp-db
