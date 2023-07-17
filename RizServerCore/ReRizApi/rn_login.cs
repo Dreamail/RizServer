@@ -23,7 +23,7 @@ namespace RizServerCoreSharp.ReRizApi
                         string ret_str = JsonConvert.SerializeObject(itemobj);
                         string aes_encrypted = Tools.Security.AES.AESEncrypt(ret_str);
                         string header_sign = Tools.Security.RSA.GenerateSignature(Tools.Security.MD5.GetHashFromString(ret_str));
-                        return (header_sign,header_token);
+                        return (aes_encrypted,header_token);
                     }
                 }
                 return (" ", "token_error");
