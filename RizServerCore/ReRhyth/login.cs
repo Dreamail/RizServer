@@ -19,7 +19,7 @@ namespace RizServerCoreSharp.ReRhyth
                 var itemobj = JsonConvert.DeserializeObject<Classes.RhythAccount>(item.obj.ToString());
                 if(itemobj.email == req.email && itemobj.password == req.password)
                 {
-                    return new Classes.RhythAccountResponseWithToken { ret = ("{\"code\":0,\"msg\":\"{\\\"email\\\":\\\"" + req.email + "\\\",\\\"avatar:\\\":{\\\"name\\\":\\\"testAvatar\\\",\\\"portrait\\\":\\\"\\\"}\"}"), header_set_token = Classes.TokenGenerator.GenerateToken(req.email) };
+                    return new Classes.RhythAccountResponseWithToken { ret = ("{\"code\":0,\"msg\":\"{\\\"email\\\":\\\"" + req.email + "\\\",\\\"avatar\\\":{\\\"name\\\":\\\"testAvatar\\\",\\\"portrait\\\":\\\"\\\"}}\"}"), header_set_token = Classes.TokenGenerator.GenerateToken(req.email) };
                 }
             }
             return new Classes.RhythAccountResponseWithToken { ret = "{\"code\":2,\"msg\":\"Password Error\"}",header_set_token = "error" };

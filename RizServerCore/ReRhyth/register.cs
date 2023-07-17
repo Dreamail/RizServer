@@ -44,7 +44,7 @@ namespace RizServerCoreSharp.ReRhyth
             };
             Classes.DBMain.AddContent(GlobalConfig.DBConfig.JsonName, "RizServerCoreSharp_RizUserAccountObject", reg_timestamp, RizNewAccount);
 
-            return new Classes.RhythAccountResponseWithToken { ret = ("{\"code\":0,\"msg\":\"{\\\"email\\\":\\\"" + req.email + "\\\",\\\"avatar:\\\":{\\\"name\\\":\\\"testAvatar\\\",\\\"portrait\\\":\\\"\\\"}\"}"), header_set_token = Classes.TokenGenerator.GenerateToken(req.email) };
+            return new Classes.RhythAccountResponseWithToken { ret = ("{\"code\":0,\"msg\":\"{\\\"email\\\":\\\"" + req.email + "\\\",\\\"avatar\\\":{\\\"name\\\":\\\"testAvatar\\\",\\\"portrait\\\":\\\"\\\"}}\"}"), header_set_token = Classes.TokenGenerator.GenerateToken(req.email) };
         }
     }
 }

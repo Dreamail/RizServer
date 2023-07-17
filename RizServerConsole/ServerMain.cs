@@ -21,6 +21,24 @@ namespace RizServerConsole
             SendResponseAsync(Response);
         }
 
+        public void CustomSendStatus200WithSetTokenHeader(HttpResponse Response, string body, string token)
+        {
+            Response.Clear();
+            Response.SetBegin(200);//200响应代码必须放置在Clear之后的一行中，否则会卡死
+            Response.SetHeader("set_token", token);
+            Response.SetBody(body);
+            SendResponseAsync(Response);
+        }
+
+        public void CustomSendStatus200WithSignHeader(HttpResponse Response, string body, string sign)
+        {
+            Response.Clear();
+            Response.SetBegin(200);//200响应代码必须放置在Clear之后的一行中，否则会卡死
+            Response.SetHeader("sign", sign);
+            Response.SetBody(body);
+            SendResponseAsync(Response);
+        }
+
         protected override void OnReceivedRequest(HttpRequest request)
         {
             // 输出请求Method与对应Url
@@ -56,6 +74,40 @@ namespace RizServerConsole
                 {
                     Response.SetHeader("SetHeaderTest", "OK");
                     SendResponseAsync(Response.MakeGetResponse("this is a post! post body: " + request.Body));
+                }
+                else if (request.Url == "/account/check_email")
+                {
+                    CustomSendStatus200AndNoHeader(Response, RizServerCoreSharp.ReRhyth.CheckEmail.Check(request.Body));
+                }
+                else if (request.Url == "/account/send_email")
+                {
+                    CustomSendStatus200AndNoHeader(Response, RizServerCoreSharp.ReRhyth.SendEmail.Send(request.Body));
+                }
+                else if (request.Url == "/account/register")
+                {
+                    var CoreReturn = RizServerCoreSharp.ReRhyth.Register.Reg(request.Body);
+                    CustomSendStatus200WithSetTokenHeader(Response, CoreReturn.ret, CoreReturn.header_set_token);
+                }
+                else if (request.Url == "/account/login")
+                {
+                    var CoreReturn = RizServerCoreSharp.ReRhyth.RhythAccountLogin.Login(request.Body);
+                    CustomSendStatus200WithSetTokenHeader(Response, CoreReturn.ret, CoreReturn.header_set_token);
+                }
+                else if (request.Url == "/game/rn_login")
+                {
+                    foreach (int i in Enumerable.Range(0, (int)request.Headers))
+                    {
+                        if (request.Header(i).Item1 == "token")
+                        {
+                            var CoreReturn = RizServerCoreSharp.ReRizApi.RizLogin.Login(request.Header(i).Item2);
+                            CustomSendStatus200WithSignHeader(Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
+                        }
+                    }
+                    CustomSendStatus200AndNoHeader(Response, "Header missing");
+                }
+                else
+                {
+                    SendResponseAsync(Response.MakeErrorResponse(404, "Error Code: 404"));
                 }
             }
             else
@@ -105,6 +157,9 @@ namespace RizServerConsole
     {
         static void Main(string[] args)
         {
+            RizServerCoreSharp.Classes.DBMain.Init();
+            RizServerCoreSharp.Classes.DBMain.InitTargetJsonFile("RizServerCoreSharp");
+
             // HTTPS server port
             int port = 8443;
             if (args.Length > 0)
