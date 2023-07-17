@@ -9,6 +9,16 @@ namespace RizServerCoreSharp.ReRhyth
 {
     public static class Register
     {
+        public static List<String> NewPlayerUnlockedLevels = new List<String>() {
+            "track.PastelLines.RekuMochizuki.0",
+            "track.Gleam.Uske.0",
+            "track.PowerAttack.EBIMAYO.0"
+        };
+
+        public static Classes.RizAccount NewPlayerTemplate = JsonConvert.DeserializeObject<Classes.RizAccount>(Classes.LoadedConfig.resources_path + "/RizAccountBase.json");
+    
+        public static string reg_timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+
         public static Classes.RhythAccountResponseWithToken Reg(string requestbody)
         {
             Classes.RhythAccountRegisterRequest req = JsonConvert.DeserializeObject<Classes.RhythAccountRegisterRequest>(requestbody);
@@ -20,8 +30,22 @@ namespace RizServerCoreSharp.ReRhyth
                 password = req.password,
                 avatar = new Classes.RhythAccountAvatar()
             };
-            Classes.DBMain.AddContent(GlobalConfig.DBConfig.JsonName, "RizServerCoreSharp_ReRhythUserAccountObject", new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(),NewAccount);
-            return new Classes.RhythAccountResponseWithToken { ret = ("{\"code\":0,\"msg\":\"{\\\"email\\\":\\\"" + req.email + "\\\",\\\"avatar:\\\":{\\\"name\\\":\\\"testAvatar\\\",\\\"portrait\\\":\\\"\\\"}\"}"),header_set_token = Classes.TokenGenerator.GenerateToken(req.email) };
+            //Create a RhythAccount
+            Classes.DBMain.AddContent(GlobalConfig.DBConfig.JsonName, "RizServerCoreSharp_ReRhythUserAccountObject", reg_timestamp, NewAccount);
+
+            //Create a RizAccount
+            var RizNewAccount = new Classes.RizAccount
+            {
+                _id = "RegTimestamp=" + reg_timestamp,
+                username = req.email,
+                unlockedLevels = NewPlayerUnlockedLevels,
+                appearLevels = NewPlayerTemplate.appearLevels,
+                getProducts = NewPlayerTemplate.getProducts,
+                getItems = NewPlayerTemplate.getItems
+            };
+            Classes.DBMain.AddContent(GlobalConfig.DBConfig.JsonName, "RizServerCoreSharp_RizUserAccountObject", reg_timestamp, RizNewAccount);
+
+            return new Classes.RhythAccountResponseWithToken { ret = ("{\"code\":0,\"msg\":\"{\\\"email\\\":\\\"" + req.email + "\\\",\\\"avatar:\\\":{\\\"name\\\":\\\"testAvatar\\\",\\\"portrait\\\":\\\"\\\"}\"}"), header_set_token = Classes.TokenGenerator.GenerateToken(req.email) };
         }
     }
 }

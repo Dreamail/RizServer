@@ -19,5 +19,13 @@ namespace RizServerCoreSharp
         {
             public static string JsonName = "RizServerCoreSharp";
         }
+
+        public class DynamicConfigTemplate
+        {
+            public string aes_key = "Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF";
+            public string aes_iv = "1%[OB.<YSw?)o:rQ";
+
+            public string resources_path = "./resources";
+        }//DynamicConfig不能直接读GlobalConfig.DynamicConfigTemplate，应该读Classes.LoadedConfig
     }
 }
