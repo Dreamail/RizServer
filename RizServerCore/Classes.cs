@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace RizServerCoreSharp
@@ -11,6 +12,7 @@ namespace RizServerCoreSharp
         public static Osp_DB.DBMain DBMain = new Osp_DB.DBMain();
         public static Tools.TokenGenerator TokenGenerator = new Tools.TokenGenerator();
         public static GlobalConfig.DynamicConfigTemplate LoadedConfig = new GlobalConfig.DynamicConfigTemplate();
+        public static Random RandomObject = new Random();
 
         public class RhythAccountCheckEmailRequest
         {
@@ -63,12 +65,6 @@ namespace RizServerCoreSharp
 
 
         
-        public class RizAccountEncryptResponseWithSign
-        {
-            public string ResponseBody;
-            public string ResponseHeaderSign;
-        }
-
         public class RizAccountMyBest
         {
             public string trackAssetId;
@@ -128,6 +124,55 @@ namespace RizServerCoreSharp
             public List<RizAccountMyBest> myBest = new List<RizAccountMyBest>();//存成绩的，至于决定最终显示列表中的哪个，这是客户端干的事
             public List<String> unlockedLevels = new List<String>();//存放已解锁歌曲的地方
             public List<String> appearLevels = new List<String>();//存放显示的歌曲的地方
+        }
+
+
+
+        public class ReRizAfterPlayRequest
+        {
+            [JsonPropertyName("trackAssetId")]
+            public string TrackAssetId { get; set; }
+
+            [JsonPropertyName("difficultyClassName")]
+            public string DifficultyClassName { get; set; }
+
+            [JsonPropertyName("score")]
+            public int Score { get; set; }
+
+            [JsonPropertyName("completeRate")]
+            public double CompleteRate { get; set; }
+
+            [JsonPropertyName("maxPerfect")]
+            public int MaxPerfect { get; set; }
+
+            [JsonPropertyName("perfect")]
+            public int Perfect { get; set; }
+
+            [JsonPropertyName("miss")]
+            public int Miss { get; set; }
+
+            [JsonPropertyName("bad")]
+            public int Bad { get; set; }
+
+            [JsonPropertyName("early")]
+            public int Early { get; set; }
+
+            [JsonPropertyName("late")]
+            public int Late { get; set; }
+
+            [JsonPropertyName("comboScore")]
+            public int ComboScore { get; set; }
+
+            [JsonPropertyName("leftHp")]
+            public double LeftHp { get; set; }
+        }
+
+
+
+        public class ReRizReturnEncryptResponseWithSign
+        {
+            public string ResponseBody;
+            public string ResponseHeaderSign;
         }
     }
 }

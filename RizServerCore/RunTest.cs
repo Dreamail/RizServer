@@ -15,7 +15,11 @@
             Console.WriteLine(ReRhyth.Register.Reg("{\"email\":\"searchstars@11.com\",\"password\":\"MADFDF0\",\"code\":\"123456\"}").ret);
             Console.WriteLine(ReRhyth.CheckEmail.Check("{\"email\" : \"searchstars@11.com\"}"));
             Console.WriteLine(ReRhyth.RhythAccountLogin.Login("{\"email\":\"searchstars@aa.com\",\"password\":\"MADFDF0\"}").ret);
-            Console.WriteLine(ReRhyth.RhythAccountLogin.Login("{\"email\":\"searchstars@11.com\",\"password\":\"MADFDF0\"}").ret);
+            var trueloginret = ReRhyth.RhythAccountLogin.Login("{\"email\":\"searchstars@11.com\",\"password\":\"MADFDF0\"}");
+            Console.WriteLine(trueloginret.ret);
+            Console.WriteLine(trueloginret.header_set_token);
+            var truernloginret = ReRizApi.RizLogin.Login(trueloginret.header_set_token);
+            Console.WriteLine("rn_login test\naes_ret=" + truernloginret.ResponseBody + "\nsign=" + truernloginret.ResponseHeaderSign);
             Console.ReadLine();
         }
     }

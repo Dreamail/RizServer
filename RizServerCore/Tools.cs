@@ -144,7 +144,8 @@ namespace RizServerCoreSharp
                 public static string GenerateSignature(string md5)
                 {
                     var rsa = System.Security.Cryptography.RSA.Create();
-                    rsa.ImportRSAPrivateKey(Convert.FromBase64String(File.ReadAllText(Classes.LoadedConfig.resources_path) + "/RSAPrivateKey.pem"), out _);
+                    var private_key_str = File.ReadAllText(Classes.LoadedConfig.resources_path + "/RSAPrivateKey.pem");
+                    rsa.ImportRSAPrivateKey(Convert.FromBase64String(private_key_str), out _);
                     var buf = rsa.Encrypt(Encoding.UTF8.GetBytes(md5), RSAEncryptionPadding.Pkcs1);
                     return Convert.ToBase64String(buf);
                 }
@@ -169,6 +170,19 @@ namespace RizServerCoreSharp
                     // 返回加密的字符串
                     return sb.ToString();
                 }
+            }
+        }
+        public static class ReRizTools
+        {
+            public static Classes.ReRizReturnEncryptResponseWithSign BuildEncryptMessage(string responsebody)
+            {
+                string aes_encrypted = Tools.Security.AES.AESEncrypt(responsebody);
+                string header_sign = Tools.Security.RSA.GenerateSignature(Tools.Security.MD5.GetHashFromString(responsebody));
+                return new Classes.ReRizReturnEncryptResponseWithSign
+                {
+                    ResponseBody = aes_encrypted,
+                    ResponseHeaderSign = header_sign
+                };
             }
         }
     }
