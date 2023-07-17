@@ -5,11 +5,15 @@ namespace RizServerCoreSharp.ReRizApi
 {
     public static class RizLogin
     {
-        public static (string,string) Login(string header_token)
+        public static Classes.RizAccountEncryptResponseWithSign Login(string header_token)
         {
             string token_email = Classes.TokenGenerator.CheckToken(header_token);
             if (token_email == null) {
-                return (" ","token_error");
+                return new Classes.RizAccountEncryptResponseWithSign
+                {
+                    ResponseBody = "Token Error",
+                    ResponseHeaderSign = ""
+                };
             }
             else
             {
@@ -23,10 +27,18 @@ namespace RizServerCoreSharp.ReRizApi
                         string ret_str = JsonConvert.SerializeObject(itemobj);
                         string aes_encrypted = Tools.Security.AES.AESEncrypt(ret_str);
                         string header_sign = Tools.Security.RSA.GenerateSignature(Tools.Security.MD5.GetHashFromString(ret_str));
-                        return (aes_encrypted,header_token);
+                        return new Classes.RizAccountEncryptResponseWithSign
+                        {
+                            ResponseBody = aes_encrypted,
+                            ResponseHeaderSign = header_sign
+                        };
                     }
                 }
-                return (" ", "token_error");
+                return new Classes.RizAccountEncryptResponseWithSign
+                {
+                    ResponseBody = "Token Error",
+                    ResponseHeaderSign = ""
+                };
             }
         }
     }
