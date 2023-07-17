@@ -26,6 +26,7 @@ namespace RizServerCoreSharp.ReRizApi
                         return (header_sign,header_token);
                     }
                 }
+                return (" ", "token_error");
             }
         }
     }
