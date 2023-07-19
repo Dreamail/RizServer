@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
-using System.Reflection.Metadata;
-using System.Buffers.Text;
-using Org.BouncyCastle.Asn1;
-using Org.BouncyCastle.Asn1.Pkcs;
+﻿using System.Text;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Encodings;
 using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Crypto.Modes;
+using Org.BouncyCastle.Crypto.Paddings;
+using Org.BouncyCastle.Utilities.Encoders;
 
 namespace RizServerCoreSharp
 {
@@ -34,19 +28,17 @@ namespace RizServerCoreSharp
             public string GenerateToken(string email)
             {
                 // 创建一个随机数生成器
-                using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
-                {
-                    // 创建一个字节数组，用来存储token
-                    byte[] tokenBytes = new byte[16];
-                    // 用随机字节填充数组
-                    rng.GetBytes(tokenBytes);
-                    // 把数组转换成base64字符串
-                    string token = Convert.ToBase64String(tokenBytes);
-                    // 把邮箱和token加到列表里，用":"分隔
-                    trustedTokens.Add(email + ":" + token);
-                    // 返回token
-                    return token;
-                }
+                Random random = new Random();
+                // 创建一个字节数组，用来存储token
+                byte[] tokenBytes = new byte[16];
+                // 用随机字节填充数组
+                random.NextBytes(tokenBytes);
+                // 把数组转换成base64字符串
+                string token = Convert.ToBase64String(tokenBytes);
+                // 把邮箱和token加到列表里，用":"分隔
+                trustedTokens.Add(email + ":" + token);
+                // 返回token
+                return token;
             }
 
             // 一个方法，用来检查一个token是否信任，并返回对应的邮箱
@@ -74,78 +66,79 @@ namespace RizServerCoreSharp
         {
             public static class AES
             {
-                // 定义AESEncrypt函数，用于用AES加密文本并输出为base64格式
-                public static string AESEncrypt(string plainText)
+                public static string AESEncrypt(string input)
                 {
-                    // 创建AES对象
-                    using (Aes aes = Aes.Create())
-                    {
-                        // 设置密钥长度为256位
-                        aes.KeySize = 256;
-                        // 设置加密模式为CBC
-                        aes.Mode = CipherMode.CBC;
-                        // 设置填充模式为PKCS7
-                        aes.Padding = PaddingMode.PKCS7;
-                        // 创建加密器
-                        ICryptoTransform encryptor = aes.CreateEncryptor(Encoding.UTF8.GetBytes(Classes.LoadedConfig.aes_key), Encoding.UTF8.GetBytes(Classes.LoadedConfig.aes_iv));
-                        // 创建内存流
-                        using (MemoryStream ms = new MemoryStream())
-                        {
-                            // 创建加密流
-                            using (CryptoStream cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
-                            {
-                                // 将文本转换为字节数组
-                                byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
-                                // 将字节数组写入加密流
-                                cs.Write(plainBytes, 0, plainBytes.Length);
-                                // 刷新加密流
-                                cs.FlushFinalBlock();
-                                // 获取加密后的字节数组
-                                byte[] cipherBytes = ms.ToArray();
-                                // 将字节数组转换为base64字符串
-                                string cipherText = Convert.ToBase64String(cipherBytes);
-                                // 返回加密后的字符串
-                                return cipherText;
-                            }
-                        }
-                    }
+                    byte[] key = Encoding.UTF8.GetBytes(Classes.LoadedConfig.aes_key);
+                    byte[] iv = Encoding.UTF8.GetBytes(Classes.LoadedConfig.aes_iv);
+
+                    // 将输入字符串转换为字节数组
+                    byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+
+                    // 创建AesEngine对象
+                    AesEngine engine = new AesEngine();
+
+                    // 创建CbcBlockCipher对象（CBC模式）
+                    CbcBlockCipher blockCipher = new CbcBlockCipher(engine);
+
+                    // 创建PaddedBufferedBlockCipher对象（PKCS7填充）
+                    PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(blockCipher, new Pkcs7Padding());
+
+                    // 创建KeyParameter对象（密钥）
+                    KeyParameter keyParam = new KeyParameter(key);
+
+                    // 创建ParametersWithIV对象（初始向量）
+                    ParametersWithIV keyParamWithIv = new ParametersWithIV(keyParam, iv);
+
+                    // 初始化cipher对象（true表示加密）
+                    cipher.Init(true, keyParamWithIv);
+
+                    // 创建输出字节数组
+                    byte[] outputBytes = new byte[cipher.GetOutputSize(inputBytes.Length)];
+
+                    // 执行加密操作
+                    int length = cipher.ProcessBytes(inputBytes, outputBytes, 0);
+                    cipher.DoFinal(outputBytes, length);
+
+                    // 将输出字节数组转换为Base64字符串
+                    return Convert.ToBase64String(outputBytes);
                 }
 
-                // 定义AESDecrypt函数，用于用AES解密base64格式的字符串并输出为文本
-                public static string AESDecrypt(string cipherText)
+                // 解密方法
+                public static string AESDecrypt(string input)
                 {
-                    // 创建AES对象
-                    using (Aes aes = Aes.Create())
-                    {
-                        // 设置密钥长度为256位
-                        aes.KeySize = 256;
-                        // 设置加密模式为CBC
-                        aes.Mode = CipherMode.CBC;
-                        // 设置填充模式为PKCS7
-                        aes.Padding = PaddingMode.PKCS7;
-                        // 创建解密器
-                        ICryptoTransform decryptor = aes.CreateDecryptor(Encoding.UTF8.GetBytes(Classes.LoadedConfig.aes_key), Encoding.UTF8.GetBytes(Classes.LoadedConfig.aes_iv));
-                        // 创建内存流
-                        using (MemoryStream ms = new MemoryStream())
-                        {
-                            // 创建解密流
-                            using (CryptoStream cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Write))
-                            {
-                                // 将base64字符串转换为字节数组
-                                byte[] cipherBytes = Convert.FromBase64String(cipherText);
-                                // 将字节数组写入解密流
-                                cs.Write(cipherBytes, 0, cipherBytes.Length);
-                                // 刷新解密流
-                                cs.FlushFinalBlock();
-                                // 获取解密后的字节数组
-                                byte[] plainBytes = ms.ToArray();
-                                // 将字节数组转换为文本
-                                string plainText = Encoding.UTF8.GetString(plainBytes);
-                                // 返回解密后的文本
-                                return plainText;
-                            }
-                        }
-                    }
+                    byte[] key = Encoding.UTF8.GetBytes(Classes.LoadedConfig.aes_key);
+                    byte[] iv = Encoding.UTF8.GetBytes(Classes.LoadedConfig.aes_iv);
+
+                    // 将输入字符串转换为字节数组
+                    byte[] inputBytes = Convert.FromBase64String(input);
+
+                    // 创建AesEngine对象
+                    AesEngine engine = new AesEngine();
+
+                    // 创建CbcBlockCipher对象（CBC模式）
+                    CbcBlockCipher blockCipher = new CbcBlockCipher(engine);
+
+                    // 创建PaddedBufferedBlockCipher对象（PKCS7填充）
+                    PaddedBufferedBlockCipher cipher = new PaddedBufferedBlockCipher(blockCipher, new Pkcs7Padding());
+
+                    // 创建KeyParameter对象（密钥）
+                    KeyParameter keyParam = new KeyParameter(key);
+
+                    // 创建ParametersWithIV对象（初始向量）
+                    ParametersWithIV keyParamWithIv = new ParametersWithIV(keyParam, iv);
+
+                    // 初始化cipher对象（false表示解密）
+                    cipher.Init(false, keyParamWithIv);
+
+                    // 创建输出字节数组
+                    byte[] outputBytes = new byte[cipher.GetOutputSize(inputBytes.Length)];
+
+                    // 执行解密操作
+                    int length = cipher.ProcessBytes(inputBytes, outputBytes, 0);
+                    cipher.DoFinal(outputBytes, length);
+
+                    // 将输出字节数组转换为UTF8字符串
+                    return Encoding.UTF8.GetString(outputBytes);
                 }
             }
 
@@ -206,44 +199,26 @@ namespace RizServerCoreSharp
 
             public static class MD5
             {
+                // MD5哈希函数
                 public static string GetMD5Hash(string input)
                 {
-                    // 创建MD5实例
-                    using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
-                    {
-                        // 将输入字符串转换为字节数组
-                        byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+                    // 创建MD5Digest对象
+                    MD5Digest digest = new MD5Digest();
 
-                        // 计算输入字节数组的MD5哈希值
-                        byte[] hashBytes = md5.ComputeHash(inputBytes);
+                    // 将输入字符串转换为字节数组
+                    byte[] inputBytes = Encoding.UTF8.GetBytes(input);
 
-                        // 将字节数组转换为十六进制字符串
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; i < hashBytes.Length; i++)
-                        {
-                            sb.Append(hashBytes[i].ToString("x2"));
-                        }
-                        return sb.ToString();
-                    }
-                }
+                    // 更新digest对象
+                    digest.BlockUpdate(inputBytes, 0, inputBytes.Length);
 
-                public static byte[] GetByteHashFromString(string str)
-                {
-                    System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create();
-                    // 将字符串转换成字节数组
-                    byte[] byteOld = Encoding.UTF8.GetBytes(str);
-                    // 调用加密方法
-                    byte[] byteNew = md5.ComputeHash(byteOld);
+                    // 创建输出字节数组
+                    byte[] outputBytes = new byte[digest.GetDigestSize()];
 
-                    StringBuilder sb = new StringBuilder();
-                    foreach (byte b in byteNew)
-                    {
-                        // 将字节转换成16进制表示的字符串，
-                        sb.Append(b.ToString("x2"));
-                    }
-                    Console.WriteLine("Debug>MD5 Hash=" + sb);
+                    // 完成digest操作
+                    digest.DoFinal(outputBytes, 0);
 
-                    return byteNew;
+                    // 使用Hex对象将输出字节数组转换为十六进制字符串
+                    return Hex.ToHexString(outputBytes);
                 }
             }
         }
