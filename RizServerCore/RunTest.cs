@@ -11,6 +11,7 @@
         static void Main(string[] args)
         {
             GlobalConfig.InitCore();
+            /*
             Console.WriteLine(ReRhyth.CheckEmail.Check("{\"email\" : \"searchstars@1.com\"}"));
             Console.WriteLine(ReRhyth.Register.Reg("{\"email\":\"searchstars@11.com\",\"password\":\"MADFDF0\",\"code\":\"123456\"}").ret);
             Console.WriteLine(ReRhyth.CheckEmail.Check("{\"email\" : \"searchstars@11.com\"}"));
@@ -20,6 +21,8 @@
             Console.WriteLine(trueloginret.header_set_token);
             var truernloginret = ReRizApi.RizLogin.Login(trueloginret.header_set_token);
             Console.WriteLine("rn_login test\naes_ret=" + truernloginret.ResponseBody + "\nsign=" + truernloginret.ResponseHeaderSign);
+            */
+            Console.WriteLine(Tools.Security.RSA.GenerateSignature(Tools.Security.MD5.GetMD5Hash("777")));
             Console.ReadLine();
         }
     }

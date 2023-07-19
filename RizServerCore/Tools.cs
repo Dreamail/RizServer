@@ -4,6 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using System.Reflection.Metadata;
+using System.Buffers.Text;
+using Org.BouncyCastle.Asn1;
+using Org.BouncyCastle.Asn1.Pkcs;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Crypto.Encodings;
+using Org.BouncyCastle.OpenSsl;
 
 namespace RizServerCoreSharp
 {
@@ -141,34 +151,99 @@ namespace RizServerCoreSharp
 
             public static class RSA
             {
+                // 使用PKCS8格式的RSA私钥加密字符串
+                public static string EncryptStringWithPrivateKey(string plainText, string privateKey)
+                {
+                    // 将私钥转换为AsymmetricKeyParameter对象
+                    AsymmetricKeyParameter key = GetPrivateKeyFromString(privateKey);
+
+                    // 创建RSA引擎并初始化
+                    var rsaEngine = new RsaEngine();
+                    rsaEngine.Init(true, key);
+
+                    // 创建PKCS1编码器并初始化
+                    var pkcs1Encoding = new Pkcs1Encoding(rsaEngine);
+                    pkcs1Encoding.Init(true, key);
+
+                    // 将明文转换为字节数组
+                    byte[] plainTextBytes = Encoding.UTF8.GetBytes(plainText);
+
+                    // 使用PKCS1编码器加密字节数组
+                    byte[] encryptedBytes = pkcs1Encoding.ProcessBlock(plainTextBytes, 0, plainTextBytes.Length);
+
+                    // 将加密后的字节数组转换为Base64编码的字符串
+                    string encryptedString = Convert.ToBase64String(encryptedBytes);
+
+                    return encryptedString;
+                }
+
+                // 从字符串中获取AsymmetricKeyParameter对象
+                private static AsymmetricKeyParameter GetPrivateKeyFromString(string privateKey)
+                {
+                    using (var txtreader = GetStreamReader(privateKey))
+                    {
+                        var keyPair = (AsymmetricKeyParameter)new PemReader(txtreader).ReadObject();
+                        return keyPair;
+                    }
+                }
+
+                private static StreamReader GetStreamReader(string content)
+                {
+                    byte[] bytes = Encoding.UTF8.GetBytes(content);
+                    var memory = new MemoryStream(bytes);
+                    var reader = new StreamReader(memory);
+
+                    return reader;
+                }
+
                 public static string GenerateSignature(string md5)
                 {
-                    var rsa = System.Security.Cryptography.RSA.Create();
-                    var private_key_str = File.ReadAllText(Classes.LoadedConfig.resources_path + "/RSAPrivateKey.pem");
-                    rsa.ImportRSAPrivateKey(Convert.FromBase64String(private_key_str), out _);
-                    var buf = rsa.Encrypt(Encoding.UTF8.GetBytes(md5), RSAEncryptionPadding.Pkcs1);
-                    return Convert.ToBase64String(buf);
+                    var private_key = File.ReadAllText(Classes.LoadedConfig.resources_path + "/RSAPrivateKey.pem");
+                    var encrypted = EncryptStringWithPrivateKey(md5, private_key);
+                    return encrypted;
                 }
             }
 
             public static class MD5
             {
-                public static string GetHashFromString(string str)
+                public static string GetMD5Hash(string input)
+                {
+                    // 创建MD5实例
+                    using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
+                    {
+                        // 将输入字符串转换为字节数组
+                        byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+
+                        // 计算输入字节数组的MD5哈希值
+                        byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                        // 将字节数组转换为十六进制字符串
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < hashBytes.Length; i++)
+                        {
+                            sb.Append(hashBytes[i].ToString("x2"));
+                        }
+                        return sb.ToString();
+                    }
+                }
+
+                public static byte[] GetByteHashFromString(string str)
                 {
                     System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create();
                     // 将字符串转换成字节数组
                     byte[] byteOld = Encoding.UTF8.GetBytes(str);
                     // 调用加密方法
                     byte[] byteNew = md5.ComputeHash(byteOld);
-                    // 将加密结果转换为字符串
+
                     StringBuilder sb = new StringBuilder();
                     foreach (byte b in byteNew)
                     {
                         // 将字节转换成16进制表示的字符串，
                         sb.Append(b.ToString("x2"));
                     }
-                    // 返回加密的字符串
-                    return sb.ToString();
+                    Console.WriteLine("Debug>MD5 Hash=" + sb);
+
+                    return byteNew;
                 }
             }
         }
@@ -177,7 +252,7 @@ namespace RizServerCoreSharp
             public static Classes.ReRizReturnEncryptResponseWithSign BuildEncryptMessage(string responsebody)
             {
                 string aes_encrypted = Tools.Security.AES.AESEncrypt(responsebody);
-                string header_sign = Tools.Security.RSA.GenerateSignature(Tools.Security.MD5.GetHashFromString(responsebody));
+                string header_sign = Tools.Security.RSA.GenerateSignature(Security.MD5.GetMD5Hash(responsebody));
                 return new Classes.ReRizReturnEncryptResponseWithSign
                 {
                     ResponseBody = aes_encrypted,

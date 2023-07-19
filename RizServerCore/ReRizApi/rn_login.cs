@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using System.Security.Cryptography;
 
 namespace RizServerCoreSharp.ReRizApi
 {
@@ -21,6 +20,7 @@ namespace RizServerCoreSharp.ReRizApi
                     if (itemobj.username == token_email)
                     {
                         string ret_str = JsonConvert.SerializeObject(itemobj);
+                        Console.WriteLine(ret_str);
                         return Tools.ReRizTools.BuildEncryptMessage(ret_str);
                     }
                 }

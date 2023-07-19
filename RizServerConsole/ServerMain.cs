@@ -2,10 +2,13 @@
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection.Emit;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using NetCoreServer;
+using Newtonsoft.Json.Linq;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace RizServerConsole
 {
@@ -30,13 +33,45 @@ namespace RizServerConsole
             SendResponseAsync(Response);
         }
 
-        public void CustomSendStatus200WithSignHeader(HttpResponse Response, string body, string sign)
+        public void CustomSendStatus200WithSignHeader(string verify, HttpResponse Response, string body, string sign)
         {
             Response.Clear();
             Response.SetBegin(200);//200响应代码必须放置在Clear之后的一行中，否则会卡死
             Response.SetHeader("sign", sign);
+            Response.SetHeader("verify", verify);
             Response.SetBody(body);
             SendResponseAsync(Response);
+        }
+
+        public (string,string) GetHeadersInRequest(HttpRequest request)
+        {
+            bool found_token = false;
+            bool found_verify = false;
+            string token = "";
+            string verify = "";
+            foreach (int i in Enumerable.Range(0, (int)request.Headers))
+            {
+                if (found_token && found_verify)
+                {
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("<Func>GetHeadersInRequest: header(i).item1=" + request.Header(i).Item1 + " header(i).item2=" + request.Header(i).Item2);
+                    if (request.Header(i).Item1 == "token")
+                    {
+                        token = request.Header(i).Item2;
+                        found_token = true;
+                    }
+                    if (request.Header(i).Item1 == "verify")
+                    {
+                        verify = request.Header(i).Item2;
+                        found_verify = true;
+                    }
+                }
+            }
+            Console.WriteLine("<Func>GetHeadersInRequest: token=" + token + " verify=" + verify);
+            return (token, verify);
         }
 
         protected override void OnReceivedRequest(HttpRequest request)
@@ -95,15 +130,36 @@ namespace RizServerConsole
                 }
                 else if (request.Url == "/game/rn_login")
                 {
-                    foreach (int i in Enumerable.Range(0, (int)request.Headers))
+                    bool req_sended = false;
+                    var headers = GetHeadersInRequest(request);
+                    if (headers.Item1 == "" || headers.Item2 == "")
                     {
-                        if (request.Header(i).Item1 == "token")
-                        {
-                            var CoreReturn = RizServerCoreSharp.ReRizApi.RizLogin.Login(request.Header(i).Item2);
-                            CustomSendStatus200WithSignHeader(Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
-                        }
+                        CustomSendStatus200AndNoHeader(Response,"missing headers");
+                        req_sended = true;
                     }
-                    CustomSendStatus200AndNoHeader(Response, "Header missing");
+
+                    if (!req_sended)
+                    {
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.RizLogin.Login(headers.Item1);
+                        CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
+                    }
+                    //CustomSendStatus200AndNoHeader(Response, "Header missing");
+                }
+                else if (request.Url == "/game/check_buy_count")
+                {
+                    bool req_sended = false;
+                    var headers = GetHeadersInRequest(request);
+                    if (headers.Item1 == "" || headers.Item2 == "")
+                    {
+                        CustomSendStatus200AndNoHeader(Response, "missing headers");
+                        req_sended = true;
+                    }
+
+                    if (!req_sended)
+                    {
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.check_buy_count.Check();
+                        CustomSendStatus200WithSignHeader(headers.Item2,Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
+                    }
                 }
                 else
                 {
