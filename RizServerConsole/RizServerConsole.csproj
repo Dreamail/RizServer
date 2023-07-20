@@ -12,6 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RizServerCore\RizServerCoreSharp.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="certs\cert.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

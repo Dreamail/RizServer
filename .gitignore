@@ -5,3 +5,6 @@ RizServerCore/bin/*
 RizServerCore/obj/*
 nanoRizBouncyCastle/bin/*
 nanoRizBouncyCastle/obj/*
+RizGo/bin/*
+RizGo/obj/*
+packages/*

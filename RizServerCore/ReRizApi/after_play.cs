@@ -55,12 +55,14 @@ namespace RizServerCoreSharp.ReRizApi
                 if (itemobj.username == token_email)
                 {
                     var NewObjectToModify = itemobj;
+                    var dotadd = Classes.RandomObject.Next(10, 50);
                     NewObjectToModify.myBest.Add(NewBestSave);
+                    NewObjectToModify.dot = NewObjectToModify.dot + dotadd;
 
                     Osp_DB.SearchFilter ModifySearchFilter = new Osp_DB.SearchFilter("RizServerCoreSharp_RizUserAccountObject", item.label, null);
                     Classes.DBMain.ModifyObject(GlobalConfig.DBConfig.JsonName, ModifySearchFilter, NewObjectToModify);
 
-                    return Tools.ReRizTools.BuildEncryptMessage("{\"newDot\":" + itemobj.dot + ",\"deltaDot\":" + Classes.RandomObject.Next(10,50) + ",\"dropedItems\":[],\"dropedLevels\":[]}");
+                    return Tools.ReRizTools.BuildEncryptMessage("{\"newDot\":" + itemobj.dot + ",\"deltaDot\":" + dotadd + ",\"dropedItems\":[],\"dropedLevels\":[]}");
                 }
             }
             return Tools.ReRizTools.BuildEncryptMessage("token_error");
