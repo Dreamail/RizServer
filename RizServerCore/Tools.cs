@@ -4,10 +4,11 @@ using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Encodings;
-using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Paddings;
 using Org.BouncyCastle.Utilities.Encoders;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Utilities.IO.Pem;
 
 namespace RizServerCoreSharp
 {
@@ -145,10 +146,10 @@ namespace RizServerCoreSharp
             public static class RSA
             {
                 // 使用PKCS8格式的RSA私钥加密字符串
-                public static string EncryptStringWithPrivateKey(string plainText, string privateKey)
+                public static string EncryptStringWithPrivateKey(string plainText, string privateKeyPath)
                 {
                     // 将私钥转换为AsymmetricKeyParameter对象
-                    AsymmetricKeyParameter key = GetPrivateKeyFromString(privateKey);
+                    AsymmetricKeyParameter key = GetPrivateKeyFromString(privateKeyPath);
 
                     // 创建RSA引擎并初始化
                     var rsaEngine = new RsaEngine();
@@ -170,12 +171,16 @@ namespace RizServerCoreSharp
                     return encryptedString;
                 }
 
-                // 从字符串中获取AsymmetricKeyParameter对象
-                private static AsymmetricKeyParameter GetPrivateKeyFromString(string privateKey)
+                // 从字符串中获取 AsymmetricKeyParameter 对象
+                private static AsymmetricKeyParameter GetPrivateKeyFromString(string privateKeyPath)
                 {
-                    using (var txtreader = GetStreamReader(privateKey))
+                    // 使用 StreamReader 从一个文件路径创建一个 TextReader 对象
+                    using (var txtreader = new StreamReader(privateKeyPath))
                     {
-                        var keyPair = (AsymmetricKeyParameter)new PemReader(txtreader).ReadObject();
+                        // 使用 Org.BouncyCastle.Utilities.IO.Pem.PemReader 来读取 PEM 对象
+                        var pemObject = new PemReader(txtreader).ReadPemObject();
+                        // 使用 Org.BouncyCastle.Security.PublicKeyFactory 来转换为 AsymmetricKeyParameter 对象
+                        var keyPair = PrivateKeyFactory.CreateKey(pemObject.Content);
                         return keyPair;
                     }
                 }
@@ -191,8 +196,7 @@ namespace RizServerCoreSharp
 
                 public static string GenerateSignature(string md5)
                 {
-                    var private_key = File.ReadAllText(Classes.LoadedConfig.resources_path + "/RSAPrivateKey.pem");
-                    var encrypted = EncryptStringWithPrivateKey(md5, private_key);
+                    var encrypted = EncryptStringWithPrivateKey(md5, Classes.LoadedConfig.resources_path + "/RSAPrivateKey.pem");
                     return encrypted;
                 }
             }
