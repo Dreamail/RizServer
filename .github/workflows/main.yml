@@ -1,0 +1,107 @@
+name: Build RizServerConsole (Windows and Linux)
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This job builds and packages the RizServerConsole project for Windows
+  build-windows:
+    # The type of runner that the job will run on
+    runs-on: windows-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks out a copy of your repository on the windows-latest machine
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Builds the RizServerConsole project using MSBuild
+      - name: Build RizServerConsole project
+        run: |
+          msbuild RizServer.sln /p:Configuration=Release /p:Platform="Any CPU" /t:RizServerConsole
+
+      # Creates a new folder named buildcontent and copies the output files into it
+      - name: Create buildcontent folder and copy output files
+        run: |
+          mkdir buildcontent
+          xcopy RizServerConsole\bin\Release\*.* buildcontent /E /Y
+
+      # Zips the buildcontent folder and uploads it as an artifact without resources
+      - name: Zip and upload buildcontent folder without resources
+        uses: actions/upload-artifact@v2
+        with:
+          name: RizServerConsoleBuild (No Resources)
+          path: buildcontent
+
+      # Clones the rizserverresources repository and copies its contents into the buildcontent/resources folder
+      - name: Clone RizServerResources and copy resources files
+        run: |
+          git clone https://github.com/osp-project/rizserverresources.git
+          mkdir buildcontent\resources
+          xcopy rizserverresources\*.* buildcontent\resources /E /Y
+
+      # Zips the buildcontent folder and uploads it as an artifact with resources
+      - name: Zip and upload buildcontent folder with resources
+        uses: actions/upload-artifact@v2
+        with:
+          name: RizServerConsoleBuild (Windows)
+          path: buildcontent
+
+  # This job builds and packages the RizServerConsole project for Linux
+  build-linux:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks out a copy of your repository on the ubuntu-latest machine
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Installs .NET Core SDK on the ubuntu-latest machine
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v1.8.2
+        with:
+          dotnet-version: '5.0.x'
+
+      # Builds the RizServerConsole project using dotnet command
+      - name: Build RizServerConsole project
+        run: |
+          dotnet build RizServer.sln --configuration Release --framework net5.0 --output ./buildoutput
+
+      # Creates a new folder named buildcontent and copies the output files into it
+      - name: Create buildcontent folder and copy output files
+        run: |
+          mkdir buildcontent
+          cp -r ./buildoutput/* ./buildcontent/
+
+      # Zips the buildcontent folder and uploads it as an artifact without resources
+      - name: Zip and upload buildcontent folder without resources
+        uses: actions/upload-artifact@v2
+        with:
+          name: RizServerConsoleBuild (No Resources)
+          path: buildcontent
+
+      # Clones the rizserverresources repository and copies its contents into the buildcontent/resources folder
+      - name: Clone RizServerResources and copy resources files
+        run: |
+          git clone https://github.com/osp-project/rizserverresources.git
+          mkdir ./buildcontent/resources/
+          cp -r ./rizserverresources/* ./buildcontent/resources/
+
+      # Zips the buildcontent folder and uploads it as an artifact with resources
+      - name: Zip and upload buildcontent folder with resources
+        uses: actions/upload-artifact@v2
+        with:
+          name: RizServerConsoleBuild (Linux)
+          path: buildcontent
+
