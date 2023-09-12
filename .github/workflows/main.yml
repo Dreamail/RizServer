@@ -24,6 +24,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
         
+      - name: Update Submodule
+        run: |
+          git submodule update --init --recursive
+
+      - name: Restore Packages
+        run: |
+          dotnet restore
+        
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
 
@@ -69,6 +77,10 @@ jobs:
       # Checks out a copy of your repository on the ubuntu-latest machine
       - name: Checkout repository
         uses: actions/checkout@v2
+
+      - name: Update Submodule
+        run: |
+          git submodule update --init --recursive
 
       # Installs .NET Core SDK on the ubuntu-latest machine
       - name: Setup .NET Core SDK
