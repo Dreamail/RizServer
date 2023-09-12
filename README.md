@@ -7,8 +7,6 @@
 `RizServerConsole` : 使用C#编写的RizServer服务器，这也是我们最常用到的部分。它创建了一个Https服务器来进行request的接受和response的发送，并在经过种种判定后通过引用`RizServerCore`对请求进行处理，输出类型为`可执行程序`
 
 `RizBCSharp` : 这是`Portable.BouncyCastle`的克隆，但被我们转换为一个`Shared`项目，以便直接引用，并最终减少输出的DLL的大小
-
-`RizGo` : 这是一个全新的项目，它基于`nanoFramework`，我们期望的目标平台是`ESP32`。但由于该项目还处于原型阶段，我也不能告诉大家太多，只能说：敬请期待
 ## 使用方法
 TODO:（以下内容是粗略且不完整的，将在日后补全）
 

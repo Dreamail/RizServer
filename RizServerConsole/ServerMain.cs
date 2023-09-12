@@ -6,6 +6,7 @@ using System.Reflection.Emit;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Web;
 using NetCoreServer;
 
 namespace RizServerConsole
@@ -15,6 +16,14 @@ namespace RizServerConsole
         public HttpsCacheSession(NetCoreServer.HttpsServer server) : base(server) { }
 
         public void CustomSendStatus200AndNoHeader(HttpResponse Response , string body)
+        {
+            Response.Clear();
+            Response.SetBegin(200);//200响应代码必须放置在Clear之后的一行中，否则会卡死
+            Response.SetBody(body);
+            SendResponseAsync(Response);
+        }
+
+        public void CustomSendStatus200AndNoHeaderByteArray(HttpResponse Response, byte[] body)
         {
             Response.Clear();
             Response.SetBegin(200);//200响应代码必须放置在Clear之后的一行中，否则会卡死
@@ -75,7 +84,7 @@ namespace RizServerConsole
         protected override void OnReceivedRequest(HttpRequest request)
         {
             // 输出请求Method与对应Url
-            Console.WriteLine(request.Method + " > " + request.Url);
+            Console.WriteLine(request.Method + " >> " + request.Url);
 
             // 对HTTP请求做出处理
             if (request.Method == "HEAD")
@@ -95,6 +104,31 @@ namespace RizServerConsole
                 else if (request.Url == "/check/status")
                 {
                     CustomSendStatus200AndNoHeader(Response, "OK");
+                }
+                else if (request.Url == "/configs/game_config.json")
+                {
+                    Console.WriteLine("请求config");
+                    CustomSendStatus200AndNoHeader(Response, "{\r\n\r\n    \"configs\": [\r\n\r\n        {\r\n\r\n            \"version\": \"1.0.8\",\r\n\r\n            \"resourceUrl\": \"http://rizlineassetstore.pigeongames.cn/versions/v1_0_8_0\"\r\n\r\n        },\r\n\r\n        {\r\n\r\n            \"version\": \"1.0.9\",\r\n\r\n            \"resourceUrl\": \"http://rizlineassetstore.pigeongames.cn/versions/v1_0_8_0\"\r\n\r\n        }\r\n\r\n    ],\r\n\r\n    \"minimalVersion\": \"1.0.8\",\r\n\r\n    \"underMaintenance\": false,\r\n\r\n    \"maintenanceNoticeZhHans\": \"\",\r\n\r\n    \"maintenanceNoticeZhHant\": \"\",\r\n\r\n    \"maintenanceNoticeEn\": \"\",\r\n\r\n    \"maintenanceNoticeJa\": \"\"\r\n\r\n}");
+                }
+                else if (request.Url.Contains("/versions/v"))
+                {
+                    try
+                    {
+                        var filename = "resources/HotUpdateResources/" + HttpUtility.UrlDecode((new Uri("https://1.com" + request.Url)).Segments.Last());
+                        Console.WriteLine("资源文件请求：" + filename);
+                        using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                        {
+                            using (BinaryReader br = new BinaryReader(fs))
+                            {
+                                byte[] data = br.ReadBytes((int)fs.Length);
+                                CustomSendStatus200AndNoHeaderByteArray(Response, data);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("在进行资源文件分发时报错，错误信息：" + ex + "\n绝大部分原因都是HotUpdateResources放置不正确或压根没放置造成的，要么你就别使用资源文件分发功能（在Fiddler Script中修改规则，也可以用文档中提供给不同用途的对应Fiddler Script），直接从官方服务器获取更新文件，要么就检查你的放置是否正确");
+                    }
                 }
                 else
                 {
