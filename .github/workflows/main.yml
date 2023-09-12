@@ -50,7 +50,7 @@ jobs:
       - name: Zip and upload buildcontent folder without resources
         uses: actions/upload-artifact@v2
         with:
-          name: RizServerConsoleBuild (No Resources)
+          name: RizServerConsoleBuild (Windows) (No Resources)
           path: buildcontent
 
       # Clones the rizserverresources repository and copies its contents into the buildcontent/resources folder
@@ -103,7 +103,7 @@ jobs:
       - name: Zip and upload buildcontent folder without resources
         uses: actions/upload-artifact@v2
         with:
-          name: RizServerConsoleBuild (No Resources)
+          name: RizServerConsoleBuild (Linux) (No Resources)
           path: buildcontent
 
       # Clones the rizserverresources repository and copies its contents into the buildcontent/resources folder
