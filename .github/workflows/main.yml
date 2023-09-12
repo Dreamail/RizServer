@@ -53,20 +53,6 @@ jobs:
           name: RizServerConsoleBuild (Windows) (No Resources)
           path: buildcontent
 
-      # Clones the rizserverresources repository and copies its contents into the buildcontent/resources folder
-      - name: Clone RizServerResources and copy resources files
-        run: |
-          git clone https://github.com/osp-project/rizserverresources.git
-          mkdir buildcontent\resources
-          xcopy rizserverresources\*.* buildcontent\resources /E /Y
-
-      # Zips the buildcontent folder and uploads it as an artifact with resources
-      - name: Zip and upload buildcontent folder with resources
-        uses: actions/upload-artifact@v2
-        with:
-          name: RizServerConsoleBuild (Windows)
-          path: buildcontent
-
   # This job builds and packages the RizServerConsole project for Linux
   build-linux:
     # The type of runner that the job will run on
@@ -104,19 +90,5 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: RizServerConsoleBuild (Linux) (No Resources)
-          path: buildcontent
-
-      # Clones the rizserverresources repository and copies its contents into the buildcontent/resources folder
-      - name: Clone RizServerResources and copy resources files
-        run: |
-          git clone https://github.com/osp-project/rizserverresources.git
-          mkdir ./buildcontent/resources/
-          cp -r ./rizserverresources/* ./buildcontent/resources/
-
-      # Zips the buildcontent folder and uploads it as an artifact with resources
-      - name: Zip and upload buildcontent folder with resources
-        uses: actions/upload-artifact@v2
-        with:
-          name: RizServerConsoleBuild (Linux)
           path: buildcontent
 
