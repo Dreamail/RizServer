@@ -160,6 +160,10 @@ namespace RizServerConsole
                     var CoreReturn = RizServerCoreSharp.ReRhyth.RhythAccountLogin.Login(request.Body);
                     CustomSendStatus200WithSetTokenHeader(Response, CoreReturn.ret, CoreReturn.header_set_token);
                 }
+                else if (request.Url == "/account/Insensitive_login")
+                {
+                    CustomSendStatus200AndNoHeader(Response,RizServerCoreSharp.ReRhyth.Insensitive_login.InsensitiveLogin(request.Body));
+                }
                 else if (request.Url == "/game/rn_login")
                 {
                     bool req_sended = false;

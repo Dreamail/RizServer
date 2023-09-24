@@ -31,6 +31,12 @@ namespace RizServerCoreSharp
             public string password;
         }
 
+        public class RhythAccountInsensitiveLoginRequest
+        {
+            public string email;
+            public string token;
+        }
+
         public class RhythAccountRegisterRequest
         {
             public string email;
