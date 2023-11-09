@@ -7,7 +7,7 @@
 - 借助强大的 [.NET](dot.net) 框架，提高了兼容性和性能。
 ## 功能实现进度
 - 本地资源分发（HotUpdateResources）：🟢
-- 本地音乐资源分发（MusicResources）：🟡（很简单但懒得做）
+- 本地音乐资源分发（MusicResources）：🟢
 - RhythNET模拟
     - 登录与注册：🟢
     - 完整账号系统架构：🟢

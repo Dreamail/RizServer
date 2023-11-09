@@ -108,20 +108,36 @@ namespace RizServerConsole
                 else if (request.Url == "/configs/game_config.json")
                 {
                     Console.WriteLine("请求config");
-                    CustomSendStatus200AndNoHeader(Response, "{\r\n\r\n    \"configs\": [\r\n\r\n        {\r\n\r\n            \"version\": \"1.0.8\",\r\n\r\n            \"resourceUrl\": \"http://rizlineassetstore.pigeongames.cn/versions/v1_0_8_0\"\r\n\r\n        },\r\n\r\n        {\r\n\r\n            \"version\": \"1.0.9\",\r\n\r\n            \"resourceUrl\": \"http://rizlineassetstore.pigeongames.cn/versions/v1_0_8_0\"\r\n\r\n        }\r\n\r\n    ],\r\n\r\n    \"minimalVersion\": \"1.0.8\",\r\n\r\n    \"underMaintenance\": false,\r\n\r\n    \"maintenanceNoticeZhHans\": \"\",\r\n\r\n    \"maintenanceNoticeZhHant\": \"\",\r\n\r\n    \"maintenanceNoticeEn\": \"\",\r\n\r\n    \"maintenanceNoticeJa\": \"\"\r\n\r\n}");
+                    CustomSendStatus200AndNoHeader(Response, "{\r\n\r\n    \"configs\": [\r\n\r\n        {\r\n\r\n            \"version\": \"1.8.0\",\r\n\r\n            \"resourceUrl\": \"http://rizlineassetstore.pigeongames.cn/versions/v1_0_8_0\"\r\n\r\n        },\r\n\r\n        {\r\n\r\n            \"version\": \"1.0.9\",\r\n\r\n            \"resourceUrl\": \"http://rizlineassetstore.pigeongames.cn/versions/v1_0_9_0\"\r\n\r\n        }\r\n\r\n    ],\r\n\r\n    \"minimalVersion\": \"1.0.0\",\r\n\r\n    \"underMaintenance\": false,\r\n\r\n    \"maintenanceNoticeZhHans\": \"\",\r\n\r\n    \"maintenanceNoticeZhHant\": \"\",\r\n\r\n    \"maintenanceNoticeEn\": \"\",\r\n\r\n    \"maintenanceNoticeJa\": \"\"\r\n\r\n}");
                 }
                 else if (request.Url.Contains("/versions/v"))
                 {
                     try
                     {
-                        var filename = "resources/HotUpdateResources/" + HttpUtility.UrlDecode((new Uri("https://1.com" + request.Url)).Segments.Last());
-                        Console.WriteLine("资源文件请求：" + filename);
-                        using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                        if (request.Url.Contains("/cridata_assets_criaddressables/"))
                         {
-                            using (BinaryReader br = new BinaryReader(fs))
+                            var filename = "resources/MusicResources/" + HttpUtility.UrlDecode((new Uri("https://1.com" + request.Url)).Segments.Last());//为什么是1.com？因为C#傻逼的uri创建方式
+                            Console.WriteLine("音乐资源文件请求：" + filename);
+                            using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
                             {
-                                byte[] data = br.ReadBytes((int)fs.Length);
-                                CustomSendStatus200AndNoHeaderByteArray(Response, data);
+                                using (BinaryReader br = new BinaryReader(fs))
+                                {
+                                    byte[] data = br.ReadBytes((int)fs.Length);
+                                    CustomSendStatus200AndNoHeaderByteArray(Response, data);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var filename = "resources/HotUpdateResources/" + HttpUtility.UrlDecode((new Uri("https://1.com" + request.Url)).Segments.Last());
+                            Console.WriteLine("资源文件请求：" + filename);
+                            using (FileStream fs = new FileStream(filename, FileMode.Open, FileAccess.Read))
+                            {
+                                using (BinaryReader br = new BinaryReader(fs))
+                                {
+                                    byte[] data = br.ReadBytes((int)fs.Length);
+                                    CustomSendStatus200AndNoHeaderByteArray(Response, data);
+                                }
                             }
                         }
                     }
@@ -162,7 +178,19 @@ namespace RizServerConsole
                 }
                 else if (request.Url == "/account/Insensitive_login")
                 {
-                    CustomSendStatus200AndNoHeader(Response,RizServerCoreSharp.ReRhyth.Insensitive_login.InsensitiveLogin(request.Body));
+                    var InsensitiveLoginResult = RizServerCoreSharp.ReRhyth.Insensitive_login.InsensitiveLogin(request.Body);
+
+                    if (InsensitiveLoginResult.Contains("token invalid"))
+                    {
+                        Response.Clear();
+                        Response.SetBegin(400);
+                        Response.SetBody(InsensitiveLoginResult);
+                        SendResponseAsync(Response);
+                    }
+                    else
+                    {
+                        CustomSendStatus200AndNoHeader(Response, InsensitiveLoginResult);
+                    }
                 }
                 else if (request.Url == "/game/rn_login")
                 {
