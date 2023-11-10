@@ -18,7 +18,8 @@ namespace RizServerCoreSharp.ReRhyth
         public static Classes.RhythAccountResponseWithToken Reg(string requestbody)
         {
             string reg_timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString() + ">" + Classes.RandomObject.Next(1, 114514).ToString();
-            Classes.RizAccount NewPlayerTemplate = JsonConvert.DeserializeObject<Classes.RizAccount>(File.ReadAllText(Classes.LoadedConfig.resources_path + "/RizAccountBase.json"));
+            Classes.RizAccount NewPlayerTemplate = Classes.RizAccountBase;
+            NewPlayerTemplate.getItems.Clear();
 
             Classes.RhythAccountRegisterRequest req = JsonConvert.DeserializeObject<Classes.RhythAccountRegisterRequest>(requestbody);
             //TODO: Do code verification after completing the SMTP function of send_email (optional in the configuration file)

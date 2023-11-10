@@ -241,6 +241,48 @@ namespace RizServerConsole
                         CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
                     }
                 }
+                else if (request.Url == "/game/rn_fetch_user_info")
+                {
+                    bool req_sended = false;
+                    var headers = GetHeadersInRequest(request);
+                    if (headers.Item1 == "" || headers.Item2 == "")
+                    {
+                        CustomSendStatus200AndNoHeader(Response, "missing headers");
+                        req_sended = true;
+                    }
+
+                    if (!req_sended)
+                    {
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.FetchUserInfo.FetchUserInfoMain(headers.Item1, request.Body);
+                        CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
+                    }
+                }
+                else if (request.Url == "/game/purchase")
+                {
+                    bool req_sended = false;
+                    var headers = GetHeadersInRequest(request);
+                    if (headers.Item1 == "" || headers.Item2 == "")
+                    {
+                        CustomSendStatus200AndNoHeader(Response, "missing headers");
+                        req_sended = true;
+                    }
+
+                    if (!req_sended)
+                    {
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.Purchase.PurchaseMain(headers.Item1, request.Body);
+                        if (CoreReturn.ResponseBody.Contains("error"))
+                        {
+                            Response.Clear();
+                            Response.SetBegin(400);
+                            Response.SetBody("");
+                            SendResponseAsync(Response);
+                        }
+                        else
+                        {
+                            CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
+                        }
+                    }
+                }
                 else
                 {
                     SendResponseAsync(Response.MakeErrorResponse(404, "Error Code: 404"));

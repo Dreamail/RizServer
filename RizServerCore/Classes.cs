@@ -1,6 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -13,6 +16,7 @@ namespace RizServerCoreSharp
         public static Tools.TokenGenerator TokenGenerator = new Tools.TokenGenerator();
         public static GlobalConfig.DynamicConfigTemplate LoadedConfig = new GlobalConfig.DynamicConfigTemplate();
         public static Random RandomObject = new Random();
+        public static Classes.RizAccount RizAccountBase = JsonConvert.DeserializeObject<Classes.RizAccount>(File.ReadAllText(Classes.LoadedConfig.resources_path + "/RizAccountBase.json"));
 
         public class RhythAccountCheckEmailRequest
         {
@@ -172,6 +176,42 @@ namespace RizServerCoreSharp
             [JsonPropertyName("leftHp")]
             public double LeftHp { get; set; }
         }
+
+        public class RizPurchaseRequest
+        {
+            public int goodId;
+        }
+
+
+        public class RizPurchaseResultInfo
+        {
+            // Token: 0x06000248 RID: 584 RVA: 0x00002050 File Offset: 0x00000250
+
+            // Token: 0x04000256 RID: 598
+            public List<RizNewLevelInfo> newLevels;
+
+            // Token: 0x04000257 RID: 599
+            public List<RizAccountItems> newItems;
+
+            // Token: 0x04000258 RID: 600
+            public int newDots;
+
+            // Token: 0x04000259 RID: 601
+            public int newCoins;
+        }
+
+        public class RizNewLevelInfo
+        {
+            // Token: 0x06000247 RID: 583 RVA: 0x00002050 File Offset: 0x00000250
+
+            // Token: 0x04000254 RID: 596
+            public string trackAssetId;
+
+            // Token: 0x04000255 RID: 597
+            public string level; //我不到啊 我也不知道这是啥
+        }
+
+
 
 
 

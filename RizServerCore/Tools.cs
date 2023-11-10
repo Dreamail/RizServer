@@ -238,6 +238,16 @@ namespace RizServerCoreSharp
                     ResponseHeaderSign = header_sign
                 };
             }
+
+            public static Classes.ReRizReturnEncryptResponseWithSign BuildNoEncryptMessage(string responsebody)
+            {
+                string header_sign = Tools.Security.RSA.GenerateSignature(Security.MD5.GetMD5Hash(responsebody));
+                return new Classes.ReRizReturnEncryptResponseWithSign
+                {
+                    ResponseBody = responsebody,
+                    ResponseHeaderSign = header_sign
+                };
+            }
         }
     }
 }
