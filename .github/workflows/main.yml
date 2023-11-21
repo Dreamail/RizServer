@@ -77,7 +77,7 @@ jobs:
       # Builds the RizServerConsole project using dotnet command
       - name: Build RizServerConsole project
         run: |
-          dotnet build RizServer.sln --configuration Release --framework net7.0 --output ./buildoutput
+          dotnet build RizServer.sln --configuration Release --framework net8.0 --output ./buildoutput
 
       # Creates a new folder named buildcontent and copies the output files into it
       - name: Create buildcontent folder and copy output files
