@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Text;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
@@ -6,8 +7,10 @@ using System.Reflection.Emit;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Unicode;
 using System.Web;
 using NetCoreServer;
+using RizServerCoreSharp;
 
 namespace RizServerConsole
 {
@@ -108,7 +111,7 @@ namespace RizServerConsole
                 else if (request.Url == "/configs/game_config.json")
                 {
                     Console.WriteLine("请求config");
-                    CustomSendStatus200AndNoHeader(Response, "{\r\n\r\n    \"configs\": [\r\n\r\n        {\r\n\r\n            \"version\": \"1.8.0\",\r\n\r\n            \"resourceUrl\": \"http://rizlineassetstore.pigeongames.cn/versions/v1_0_8_0\"\r\n\r\n        },\r\n\r\n        {\r\n\r\n            \"version\": \"1.0.9\",\r\n\r\n            \"resourceUrl\": \"http://rizlineassetstore.pigeongames.cn/versions/v1_0_9_0\"\r\n\r\n        }\r\n\r\n    ],\r\n\r\n    \"minimalVersion\": \"1.0.0\",\r\n\r\n    \"underMaintenance\": false,\r\n\r\n    \"maintenanceNoticeZhHans\": \"\",\r\n\r\n    \"maintenanceNoticeZhHant\": \"\",\r\n\r\n    \"maintenanceNoticeEn\": \"\",\r\n\r\n    \"maintenanceNoticeJa\": \"\"\r\n\r\n}");
+                    CustomSendStatus200AndNoHeader(Response, "{\r\n\r\n    \"configs\": [\r\n\r\n        {\r\n\r\n            \"version\": \"1.8.0\",\r\n\r\n            \"resourceUrl\": \"http://" + Convert.FromBase64String(GlobalConfig.Base64Strings.GameName) + "assetstore." + Convert.FromBase64String(GlobalConfig.Base64Strings.GameCompanyName) + ".cn/versions/v1_0_8_0\"\r\n\r\n        },\r\n\r\n        {\r\n\r\n            \"version\": \"1.0.9\",\r\n\r\n            \"resourceUrl\": \"http://" + Convert.FromBase64String(GlobalConfig.Base64Strings.GameName) + "assetstore." + Convert.FromBase64String(GlobalConfig.Base64Strings.GameCompanyName) + ".cn/versions/v1_0_9_0\"\r\n\r\n        }\r\n\r\n    ],\r\n\r\n    \"minimalVersion\": \"1.0.0\",\r\n\r\n    \"underMaintenance\": false,\r\n\r\n    \"maintenanceNoticeZhHans\": \"\",\r\n\r\n    \"maintenanceNoticeZhHant\": \"\",\r\n\r\n    \"maintenanceNoticeEn\": \"\",\r\n\r\n    \"maintenanceNoticeJa\": \"\"\r\n\r\n}");
                 }
                 else if (request.Url.Contains("/versions/v"))
                 {

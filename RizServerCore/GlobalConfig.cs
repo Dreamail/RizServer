@@ -20,6 +20,13 @@ namespace RizServerCoreSharp
             public static string JsonName = "RizServerCoreSharp";
         }
 
+        public class Base64Strings
+        {
+            public static string GameName = "cml6bGluZQ==";
+
+            public static string GameCompanyName = "cGlnZW9uZ2FtZXM=";
+        }
+
         public class DynamicConfigTemplate
         {
             public string aes_key = "Sv@H,+SV-U*VEjCW,n7WA-@n}j3;U;XF";
