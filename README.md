@@ -30,10 +30,17 @@
 
 `RizBCSharp` : 这是`Portable.BouncyCastle`的克隆，但被我们转换为一个`Shared`项目，以便直接引用，并最终减少输出的DLL的大小
 ## 使用方法
-TODO:（以下内容是粗略且不完整的，将在日后补全）
+以下教程较为粗略，出于某些原因也没法写的十分详细，因此请开动你巧妙的大脑！
 
-克隆整个仓库，打开RizServer.sln，运行`RizServerConsole`项目即可
+1. 安装带有C#功能特性的`Visual Studio 2022`
+2. 安装`.NET SDK 8.0`
+3. 克隆整个仓库，打开RizServer.sln，编译`RizServerConsole`项目
+4. 找到编译输出目录（与RizServerConsole.exe同目录），下载[Resources](https://github.com/osp-project/RizServerResources)，命名为resources文件夹，丢进编译输出目录
+5. 运行RizServerConsole.exe
+6. 安装`Fiddler Classic`
+7. 找到让你手机信任电脑Fiddler Classic证书的方法，并进行信任
+8. 选用合适的Fiddler Script：[1. 在线热更版（需要在线下载更新，官方版本升级即失效）](https://gist.github.com/Searchstars/4df7b9658a9ef3000a1673ed14b5bc7c) [2. 本地热更版（完全离线，版本更新需要同时更新resources）](https://gist.github.com/Searchstars/71e67cbf03e4da317b68fd9079c341ef)
+9. 根据手机系统选择ProxyDroid或ShadowRocket（注意规则设置）作为你的代理软件，连接你电脑的Fiddler Classic代理
+10. Enjoy it
 
-剩下的代理配置和证书信任什么的还是老样子，我相信你会的
-
-解锁全歌曲的方法请自行摸索，鸽游目前经济状况不佳，还请 **支持正版**。
+进入游戏后默认只解锁新人三首歌，解锁全歌曲的方法请自行摸索，请时刻对游戏开发商保持敬畏之心，并在有能力的情况下 **支持正版**。
