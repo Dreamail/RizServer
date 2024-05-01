@@ -13,14 +13,14 @@ namespace RizServerCoreSharp.ReRizApi
         private static List<RizNewLevelInfo> new_tracks = new List<RizNewLevelInfo>();
         private static List<RizAccountItems> new_items = new List<RizAccountItems>();
 
-        public static ReRizReturnEncryptResponseWithSign PurchaseMain(string header_token, string requestbody)
+        public static ReRizReturnEncryptResponseWithSign PurchaseMain(string header_token, string requestbody, string verify)
         {
             RizPurchaseRequest req = JsonConvert.DeserializeObject<RizPurchaseRequest>(requestbody);
 
             string token_email = Classes.TokenGenerator.CheckToken(header_token);
             if (token_email == null)
             {
-                return Tools.ReRizTools.BuildEncryptMessage("token_error");
+                return Tools.ReRizTools.BuildEncryptMessage("token_error", verify);
             }
 
             Osp_DB.SearchFilter SearchFilter = new Osp_DB.SearchFilter("RizServerCoreSharp_RizUserAccountObject", null, null);
@@ -28,118 +28,118 @@ namespace RizServerCoreSharp.ReRizApi
             foreach (var item in SearchResult)
             {
                 var itemobj = JsonConvert.DeserializeObject<Classes.RizAccount>(item.obj.ToString());
-                if (itemobj.username == token_email)
+                if (itemobj._id.Split(">")[2] == token_email)
                 {
                     var can_purchase = false;
                     RizAccountProduct target_product;
                     int target_need_dot = 0;
                     int target_need_coin = 0;
 
-                    foreach (var product in Classes.RizAccountBase.getProducts)
+                    foreach (var events in Classes.RizAccountBase.getProducts)
                     {
-                        if(product.id == req.goodId)
+                        foreach (var product in events.goods)
                         {
-                            target_product = product;
-                            foreach (var cost in product.costs)
+                            if (product.id == req.goodId)
                             {
-                                if(cost.type == "dot")
+                                target_product = product;
+                                foreach (var cost in product.costs)
                                 {
-                                    if (itemobj.dot >= cost.amount)
+                                    if (cost.type == "dot")
                                     {
-                                        can_purchase = true;
-                                        target_need_dot = cost.amount;
-                                    }
-                                }
-                                else if(cost.type == "coin")
-                                {
-                                    if(itemobj.coin >= cost.amount)
-                                    {
-                                        can_purchase = true;
-                                        target_need_coin = cost.amount;
-                                    }
-                                }
-                            }
-                            if (can_purchase)
-                            {
-                                //优先扣除dot
-                                var NewObjectToModify = itemobj;
-                                if (NewObjectToModify.dot >= target_need_dot)
-                                {
-                                    NewObjectToModify.dot -= target_need_dot;
-                                }
-                                else
-                                {
-                                    NewObjectToModify.coin -= target_need_coin;
-                                }
-                                bool Player_Buyed_This_Before = false;
-                                foreach (var ownProduct in NewObjectToModify.getOwnProducts)
-                                {
-                                    if(ownProduct.goodId == req.goodId)
-                                    {
-                                        Player_Buyed_This_Before = true;
-                                        ownProduct.purchaseCount ++;
-                                    }
-                                }
-                                if (!Player_Buyed_This_Before)
-                                {
-                                    NewObjectToModify.getOwnProducts.Add(new RizAccountOwnProduct
-                                    {
-                                        goodId = req.goodId,
-                                        purchaseCount = 1
-                                    });
-                                }
-                                
-                                foreach (var asset in target_product.assets)
-                                {
-                                    if(asset.type == "track")
-                                    {
-                                        if (!NewObjectToModify.appearLevels.Contains(asset.assetId))
+                                        if (itemobj.dot >= cost.amount)
                                         {
-                                            NewObjectToModify.appearLevels.Add(asset.assetId);
+                                            can_purchase = true;
+                                            target_need_dot = cost.amount;
                                         }
-                                        NewObjectToModify.unlockedLevels.Add(asset.assetId);
+                                    }
+                                    else if (cost.type == "coin")
+                                    {
+                                        if (itemobj.coin >= cost.amount)
+                                        {
+                                            can_purchase = true;
+                                            target_need_coin = cost.amount;
+                                        }
+                                    }
+                                }
+                                if (can_purchase)
+                                {
+                                    //优先扣除dot
+                                    var NewObjectToModify = itemobj;
+                                    if (NewObjectToModify.dot >= target_need_dot)
+                                    {
+                                        NewObjectToModify.dot -= target_need_dot;
+                                    }
+                                    else
+                                    {
+                                        NewObjectToModify.coin -= target_need_coin;
+                                    }
+                                    bool Player_Buyed_This_Before = false;
+                                    foreach (var ownProduct in NewObjectToModify.getOwnProducts)
+                                    {
+                                        if (ownProduct.goodId == req.goodId)
+                                        {
+                                            Player_Buyed_This_Before = true;
+                                            ownProduct.purchaseCount++;
+                                        }
+                                    }
+                                    if (!Player_Buyed_This_Before)
+                                    {
+                                        NewObjectToModify.getOwnProducts.Add(new RizAccountOwnProduct
+                                        {
+                                            goodId = req.goodId,
+                                            purchaseCount = 1
+                                        });
+                                    }
+
+                                    if (target_product.content.Contains("track"))
+                                    {
+                                        if (!NewObjectToModify.appearLevels.Contains(target_product.content))
+                                        {
+                                            NewObjectToModify.appearLevels.Add(target_product.content);
+                                        }
+                                        NewObjectToModify.unlockedLevels.Add(target_product.content);
                                         new_tracks.Add(new RizNewLevelInfo
                                         {
-                                            trackAssetId = asset.assetId,
+                                            trackAssetId = target_product.content,
                                             level = "idk"
                                         });
                                     }
-                                    else if(asset.type == "item")
+                                    else
                                     {
                                         NewObjectToModify.getItems.Add(new RizAccountItems
                                         {
-                                            amount = asset.amount,
-                                            itemAssetId = asset.assetId
+                                            amount = 1,
+                                            itemAssetId = target_product.content
                                         });
                                         new_items.Add(new RizAccountItems
                                         {
-                                            amount = asset.amount,
-                                            itemAssetId = asset.assetId
+                                            amount = 1,
+                                            itemAssetId = target_product.content
                                         });
                                     }
+
+                                    Osp_DB.SearchFilter ModifySearchFilter = new Osp_DB.SearchFilter("RizServerCoreSharp_RizUserAccountObject", item.label, null);
+                                    Classes.DBMain.ModifyObject(GlobalConfig.DBConfig.JsonName, ModifySearchFilter, NewObjectToModify);
+                                    return Tools.ReRizTools.BuildEncryptMessage(JsonConvert.SerializeObject(new RizPurchaseResultInfo
+                                    {
+                                        newCoins = NewObjectToModify.coin,
+                                        newDots = NewObjectToModify.dot,
+                                        newItems = new_items,
+                                        newLevels = new_tracks
+                                    }), verify);
                                 }
-                                Osp_DB.SearchFilter ModifySearchFilter = new Osp_DB.SearchFilter("RizServerCoreSharp_RizUserAccountObject", item.label, null);
-                                Classes.DBMain.ModifyObject(GlobalConfig.DBConfig.JsonName, ModifySearchFilter, NewObjectToModify);
-                                return Tools.ReRizTools.BuildEncryptMessage(JsonConvert.SerializeObject(new RizPurchaseResultInfo
+                                else
                                 {
-                                    newCoins = NewObjectToModify.coin,
-                                    newDots = NewObjectToModify.dot,
-                                    newItems = new_items,
-                                    newLevels = new_tracks
-                                }));
-                            }
-                            else
-                            {
-                                return Tools.ReRizTools.BuildNoEncryptMessage("error_cant_purchase_because_dont_have_enough_costs");
+                                    return Tools.ReRizTools.BuildNoEncryptMessage("error_cant_purchase_because_dont_have_enough_costs", verify);
+                                }
                             }
                         }
                     }
-
-                    return Tools.ReRizTools.BuildNoEncryptMessage("error_target_product_not_found");
+                    return Tools.ReRizTools.BuildNoEncryptMessage("error_target_product_not_found", verify);
                 }
             }
 
-            return Tools.ReRizTools.BuildEncryptMessage("token_error");
+            return Tools.ReRizTools.BuildEncryptMessage("token_error", verify);
         }
     }
 }

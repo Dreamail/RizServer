@@ -4,11 +4,11 @@ namespace RizServerCoreSharp.ReRizApi
 {
     public static class RizLogin
     {
-        public static Classes.ReRizReturnEncryptResponseWithSign Login(string header_token)
+        public static Classes.ReRizReturnEncryptResponseWithSign Login(string header_token, string verify)
         {
             string token_email = Classes.TokenGenerator.CheckToken(header_token);
             if (token_email == null) {
-                return Tools.ReRizTools.BuildEncryptMessage("token_error");
+                return Tools.ReRizTools.BuildEncryptMessage("token_error", verify);
             }
             else
             {
@@ -17,14 +17,14 @@ namespace RizServerCoreSharp.ReRizApi
                 foreach (var item in SearchResult)
                 {
                     var itemobj = JsonConvert.DeserializeObject<Classes.RizAccount>(item.obj.ToString());
-                    if (itemobj.username == token_email)
+                    if (itemobj._id.Split(">")[2] == token_email)
                     {
                         string ret_str = JsonConvert.SerializeObject(itemobj);
                         Console.WriteLine(ret_str);
-                        return Tools.ReRizTools.BuildEncryptMessage(ret_str);
+                        return Tools.ReRizTools.BuildEncryptMessage(ret_str, verify);
                     }
                 }
-                return Tools.ReRizTools.BuildEncryptMessage("token_error");
+                return Tools.ReRizTools.BuildEncryptMessage("token_error", verify);
             }
         }
     }

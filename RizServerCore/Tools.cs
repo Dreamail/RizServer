@@ -228,10 +228,10 @@ namespace RizServerCoreSharp
         }
         public static class ReRizTools
         {
-            public static Classes.ReRizReturnEncryptResponseWithSign BuildEncryptMessage(string responsebody)
+            public static Classes.ReRizReturnEncryptResponseWithSign BuildEncryptMessage(string responsebody, string verify_id)
             {
                 string aes_encrypted = Tools.Security.AES.AESEncrypt(responsebody);
-                string header_sign = Tools.Security.RSA.GenerateSignature(Security.MD5.GetMD5Hash(responsebody));
+                string header_sign = Tools.Security.RSA.GenerateSignature(Security.MD5.GetMD5Hash(responsebody + "1145141919810" + verify_id));
                 return new Classes.ReRizReturnEncryptResponseWithSign
                 {
                     ResponseBody = aes_encrypted,
@@ -239,9 +239,9 @@ namespace RizServerCoreSharp
                 };
             }
 
-            public static Classes.ReRizReturnEncryptResponseWithSign BuildNoEncryptMessage(string responsebody)
+            public static Classes.ReRizReturnEncryptResponseWithSign BuildNoEncryptMessage(string responsebody, string verify_id)
             {
-                string header_sign = Tools.Security.RSA.GenerateSignature(Security.MD5.GetMD5Hash(responsebody));
+                string header_sign = Tools.Security.RSA.GenerateSignature(Security.MD5.GetMD5Hash(responsebody + "1145141919810" + verify_id));
                 return new Classes.ReRizReturnEncryptResponseWithSign
                 {
                     ResponseBody = responsebody,

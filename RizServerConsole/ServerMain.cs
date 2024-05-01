@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection.Emit;
+using System.Reflection.PortableExecutable;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -49,6 +50,8 @@ namespace RizServerConsole
             Response.SetBegin(200);//200响应代码必须放置在Clear之后的一行中，否则会卡死
             Response.SetHeader("sign", sign);
             Response.SetHeader("verify", verify);
+            Response.SetHeader("user-id", "1145141919810");
+            Response.SetHeader("broadcast-expires", "true");
             Response.SetBody(body);
             SendResponseAsync(Response);
         }
@@ -103,6 +106,10 @@ namespace RizServerConsole
                 if (request.Url == "/")
                 {
                     SendResponseAsync(Response.MakeGetResponse("Looks like RizServerConsole is working fine, keep going!"));
+                }
+                else if (request.Url == "/generate_204")
+                {
+                    SendResponseAsync(Response.MakeGetResponse("OK"));
                 }
                 else if (request.Url == "/check/status")
                 {
@@ -207,10 +214,26 @@ namespace RizServerConsole
 
                     if (!req_sended)
                     {
-                        var CoreReturn = RizServerCoreSharp.ReRizApi.RizLogin.Login(headers.Item1);
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.RizLogin.Login(headers.Item1, headers.Item2);
                         CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
                     }
                     //CustomSendStatus200AndNoHeader(Response, "Header missing");
+                }
+                else if (request.Url == "/game/change_username")
+                {
+                    bool req_sended = false;
+                    var headers = GetHeadersInRequest(request);
+                    if (headers.Item1 == "" || headers.Item2 == "")
+                    {
+                        CustomSendStatus200AndNoHeader(Response, "missing headers");
+                        req_sended = true;
+                    }
+
+                    if (!req_sended)
+                    {
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.ChangeUserName.ChangeNow(headers.Item1, request.Body, headers.Item2);
+                        CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
+                    }
                 }
                 else if (request.Url == "/game/check_buy_count")
                 {
@@ -224,7 +247,7 @@ namespace RizServerConsole
 
                     if (!req_sended)
                     {
-                        var CoreReturn = RizServerCoreSharp.ReRizApi.check_buy_count.Check();
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.check_buy_count.Check(headers.Item2);
                         CustomSendStatus200WithSignHeader(headers.Item2,Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
                     }
                 }
@@ -240,11 +263,11 @@ namespace RizServerConsole
 
                     if (!req_sended)
                     {
-                        var CoreReturn = RizServerCoreSharp.ReRizApi.AfterPlay.AfterPlayMain(headers.Item1,request.Body);
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.AfterPlay.AfterPlayMain(headers.Item1,request.Body, headers.Item2);
                         CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
                     }
                 }
-                else if (request.Url == "/game/rn_fetch_user_info")
+                else if (request.Url == "/game/fetch_user_info")
                 {
                     bool req_sended = false;
                     var headers = GetHeadersInRequest(request);
@@ -256,7 +279,7 @@ namespace RizServerConsole
 
                     if (!req_sended)
                     {
-                        var CoreReturn = RizServerCoreSharp.ReRizApi.FetchUserInfo.FetchUserInfoMain(headers.Item1, request.Body);
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.FetchUserInfo.FetchUserInfoMain(headers.Item1, request.Body, headers.Item2);
                         CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
                     }
                 }
@@ -272,7 +295,7 @@ namespace RizServerConsole
 
                     if (!req_sended)
                     {
-                        var CoreReturn = RizServerCoreSharp.ReRizApi.Purchase.PurchaseMain(headers.Item1, request.Body);
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.Purchase.PurchaseMain(headers.Item1, request.Body, headers.Item2);
                         if (CoreReturn.ResponseBody.Contains("error"))
                         {
                             Response.Clear();
@@ -284,6 +307,86 @@ namespace RizServerConsole
                         {
                             CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
                         }
+                    }
+                }
+                else if (request.Url == "/game/get_broadcasts")
+                {
+                    bool req_sended = false;
+                    var headers = GetHeadersInRequest(request);
+                    if (headers.Item1 == "" || headers.Item2 == "")
+                    {
+                        CustomSendStatus200AndNoHeader(Response, "missing headers");
+                        req_sended = true;
+                    }
+
+                    if (!req_sended)
+                    {
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.GetBroadCasts.GetNow(headers.Item2);
+                        CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
+                    }
+                }
+                else if (request.Url == "/game/get_user_shop")
+                {
+                    bool req_sended = false;
+                    var headers = GetHeadersInRequest(request);
+                    if (headers.Item1 == "" || headers.Item2 == "")
+                    {
+                        CustomSendStatus200AndNoHeader(Response, "missing headers");
+                        req_sended = true;
+                    }
+
+                    if (!req_sended)
+                    {
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.GetUserShop.GetNow(headers.Item1, request.Body, headers.Item2);
+                        CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
+                    }
+                }
+                else if (request.Url == "/game/game_start")
+                {
+                    bool req_sended = false;
+                    var headers = GetHeadersInRequest(request);
+                    if (headers.Item1 == "" || headers.Item2 == "")
+                    {
+                        CustomSendStatus200AndNoHeader(Response, "missing headers");
+                        req_sended = true;
+                    }
+
+                    if (!req_sended)
+                    {
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.GameStart.Start(headers.Item2);
+                        CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
+                    }
+                }
+                else if (request.Url == "/game/event")
+                {
+                    bool req_sended = false;
+                    var headers = GetHeadersInRequest(request);
+                    if (headers.Item1 == "" || headers.Item2 == "")
+                    {
+                        CustomSendStatus200AndNoHeader(Response, "missing headers");
+                        req_sended = true;
+                    }
+
+                    if (!req_sended)
+                    {
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.SpecialEvent.GetNow(headers.Item2);
+                        CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
+                    }
+                }
+                else if (request.Url == "/game/set_rizcard")
+                {
+                    bool req_sended = false;
+                    var headers = GetHeadersInRequest(request);
+                    if (headers.Item1 == "" || headers.Item2 == "")
+                    {
+                        CustomSendStatus200AndNoHeader(Response, "missing headers");
+                        req_sended = true;
+                    }
+
+                    if (!req_sended)
+                    {
+                        var CoreReturn = RizServerCoreSharp.ReRizApi.GetUserShop.GetNow(headers.Item1, request.Body, headers.Item2);
+                        CustomSendStatus200WithSignHeader(headers.Item2, Response, CoreReturn.ResponseBody, CoreReturn.ResponseHeaderSign);
                     }
                 }
                 else

@@ -4,13 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static RizServerCoreSharp.Classes;
 
 namespace RizServerCoreSharp.ReRizApi
 {
-    public static class FetchUserInfo
+    public static class SetRizCard
     {
-        public static ReRizReturnEncryptResponseWithSign FetchUserInfoMain(string header_token, string requestbody, string verify)
+        public static Classes.ReRizReturnEncryptResponseWithSign SetNow(string header_token, string requestBody, string verify)
         {
             string token_email = Classes.TokenGenerator.CheckToken(header_token);
             if (token_email == null)
@@ -18,14 +17,19 @@ namespace RizServerCoreSharp.ReRizApi
                 return Tools.ReRizTools.BuildEncryptMessage("token_error", verify);
             }
 
+            var body = JsonConvert.DeserializeObject<Classes.RizAccountRizcard>(requestBody);
+
             Osp_DB.SearchFilter SearchFilter = new Osp_DB.SearchFilter("RizServerCoreSharp_RizUserAccountObject", null, null);
             var SearchResult = Classes.DBMain.SearchWithFilter(GlobalConfig.DBConfig.JsonName, SearchFilter);
             foreach (var item in SearchResult)
             {
-                var itemobj = JsonConvert.DeserializeObject<Classes.RizAccount>(item.obj.ToString());
-                if (itemobj._id.Split(">")[2] == token_email)
+                var NewObjectToModify = JsonConvert.DeserializeObject<Classes.RizAccount>(item.obj.ToString());
+                if (NewObjectToModify._id.Split(">")[2] == token_email)
                 {
-                    return Tools.ReRizTools.BuildEncryptMessage("{\"code\":0,\"data\":{\"username\":\"\",\"dot\":" + itemobj.dot + ",\"coin\":" + itemobj.coin + "}}", verify);
+                    NewObjectToModify.rizcard = body;
+                    Osp_DB.SearchFilter ModifySearchFilter = new Osp_DB.SearchFilter("RizServerCoreSharp_RizUserAccountObject", item.label, null);
+                    Classes.DBMain.ModifyObject(GlobalConfig.DBConfig.JsonName, ModifySearchFilter, NewObjectToModify);
+                    return Tools.ReRizTools.BuildEncryptMessage("{\"code\": 0, \"data\": {}}", verify);
                 }
             }
             return Tools.ReRizTools.BuildEncryptMessage("token_error", verify);

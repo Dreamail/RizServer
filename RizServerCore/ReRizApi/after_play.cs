@@ -27,14 +27,14 @@ namespace RizServerCoreSharp.ReRizApi
             return true;
         }
 
-        public static ReRizReturnEncryptResponseWithSign AfterPlayMain(string header_token,string requestbody)
+        public static ReRizReturnEncryptResponseWithSign AfterPlayMain(string header_token, string requestbody, string verify)
         {
             ReRizAfterPlayRequest req = JsonConvert.DeserializeObject<ReRizAfterPlayRequest>(requestbody);
 
             string token_email = Classes.TokenGenerator.CheckToken(header_token);
             if(token_email == null)
             {
-                return Tools.ReRizTools.BuildEncryptMessage("token_error");
+                return Tools.ReRizTools.BuildEncryptMessage("token_error", verify);
             }
 
             var NewBestSave = new RizAccountMyBest
@@ -52,7 +52,7 @@ namespace RizServerCoreSharp.ReRizApi
             foreach (var item in SearchResult)
             {
                 var itemobj = JsonConvert.DeserializeObject<Classes.RizAccount>(item.obj.ToString());
-                if (itemobj.username == token_email)
+                if (itemobj._id.Split(">")[2] == token_email)
                 {
                     var NewObjectToModify = itemobj;
                     var dotadd = Classes.RandomObject.Next(10, 50);
@@ -62,10 +62,10 @@ namespace RizServerCoreSharp.ReRizApi
                     Osp_DB.SearchFilter ModifySearchFilter = new Osp_DB.SearchFilter("RizServerCoreSharp_RizUserAccountObject", item.label, null);
                     Classes.DBMain.ModifyObject(GlobalConfig.DBConfig.JsonName, ModifySearchFilter, NewObjectToModify);
 
-                    return Tools.ReRizTools.BuildEncryptMessage("{\"newDot\":" + itemobj.dot + ",\"deltaDot\":" + dotadd + ",\"dropedItems\":[],\"dropedLevels\":[]}");
+                    return Tools.ReRizTools.BuildEncryptMessage("{\"newDot\":" + itemobj.dot + ",\"deltaDot\":" + dotadd + ",\"dropedItems\":[],\"dropedLevels\":[]}", verify);
                 }
             }
-            return Tools.ReRizTools.BuildEncryptMessage("token_error");
+            return Tools.ReRizTools.BuildEncryptMessage("token_error", verify);
         }
     }
 }

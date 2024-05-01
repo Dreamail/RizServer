@@ -36,12 +36,22 @@ namespace RizServerCoreSharp.ReRhyth
             //Create a RizAccount
             var RizNewAccount = new Classes.RizAccount
             {
-                _id = "RegTimestamp=" + reg_timestamp,
+                _id = "RegTimestamp=" + reg_timestamp + ">" + req.email,
                 username = req.email,
+                coin = 114,
+                dot = 114514,
+                rizcard = NewPlayerTemplate.rizcard,
+                getOwnProducts = NewPlayerTemplate.getOwnProducts,
                 unlockedLevels = NewPlayerUnlockedLevels,
                 appearLevels = NewPlayerTemplate.appearLevels,
                 getProducts = NewPlayerTemplate.getProducts,
-                getItems = NewPlayerTemplate.getItems
+                getItems = NewPlayerTemplate.getItems,
+                myBest = NewPlayerTemplate.myBest,
+                getOwnAchievements = NewPlayerTemplate.getOwnAchievements,
+                ownRizcards = NewPlayerTemplate.ownRizcards,
+                staticRizcards = NewPlayerTemplate.staticRizcards,
+                mails = NewPlayerTemplate.mails,
+                mailSyncId = 114514
             };
             Classes.DBMain.AddContent(GlobalConfig.DBConfig.JsonName, "RizServerCoreSharp_RizUserAccountObject", reg_timestamp, RizNewAccount);
 
