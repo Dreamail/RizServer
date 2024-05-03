@@ -17,7 +17,7 @@ namespace RizServerCoreSharp.ReRizApi
                 foreach (var item in SearchResult)
                 {
                     var itemobj = JsonConvert.DeserializeObject<Classes.RizAccount>(item.obj.ToString());
-                    if (itemobj._id.Split(">")[2] == token_email)
+                    if (!itemobj._id.Contains(">") || itemobj._id.Split(">")[2] == token_email)
                     {
                         string ret_str = JsonConvert.SerializeObject(itemobj);
                         Console.WriteLine(ret_str);
