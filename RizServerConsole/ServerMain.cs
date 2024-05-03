@@ -15,9 +15,9 @@ using RizServerCoreSharp;
 
 namespace RizServerConsole
 {
-    class HttpsCacheSession : HttpsSession
+    class HttpCacheSession : HttpSession
     {
-        public HttpsCacheSession(NetCoreServer.HttpsServer server) : base(server) { }
+        public HttpCacheSession(NetCoreServer.HttpServer server) : base(server) { }
 
         public void CustomSendStatus200AndNoHeader(HttpResponse Response , string body)
         {
@@ -71,12 +71,12 @@ namespace RizServerConsole
                 else
                 {
                     Console.WriteLine("<Func>GetHeadersInRequest: header(i).item1=" + request.Header(i).Item1 + " header(i).item2=" + request.Header(i).Item2);
-                    if (request.Header(i).Item1 == "token")
+                    if (request.Header(i).Item1 == "token" || request.Header(i).Item1 == "Token")
                     {
                         token = request.Header(i).Item2;
                         found_token = true;
                     }
-                    if (request.Header(i).Item1 == "verify")
+                    if (request.Header(i).Item1 == "verify" || request.Header(i).Item1 == "Verify")
                     {
                         verify = request.Header(i).Item2;
                         found_verify = true;
@@ -118,7 +118,7 @@ namespace RizServerConsole
                 else if (request.Url == "/configs/game_config.json")
                 {
                     Console.WriteLine("请求config");
-                    CustomSendStatus200AndNoHeader(Response, "{\r\n\r\n    \"configs\": [\r\n\r\n        {\r\n\r\n            \"version\": \"1.1.1\",\r\n\r\n            \"resourceUrl\": \"http://" + Encoding.UTF8.GetString(Convert.FromBase64String(GlobalConfig.Base64Strings.GameName)) + "assetstore." + Encoding.UTF8.GetString(Convert.FromBase64String(GlobalConfig.Base64Strings.GameCompanyName)) + ".cn/versions/v1_0_8_0\"\r\n\r\n        },\r\n\r\n        {\r\n\r\n            \"version\": \"1.1.2\",\r\n\r\n            \"resourceUrl\": \"http://" + Encoding.UTF8.GetString(Convert.FromBase64String(GlobalConfig.Base64Strings.GameName)) + "assetstore." + Encoding.UTF8.GetString(Convert.FromBase64String(GlobalConfig.Base64Strings.GameCompanyName)) + ".cn/versions/v1_0_9_0\"\r\n\r\n        }\r\n\r\n    ],\r\n\r\n    \"minimalVersion\": \"1.0.0\",\r\n\r\n    \"underMaintenance\": false,\r\n\r\n    \"maintenanceNoticeZhHans\": \"\",\r\n\r\n    \"maintenanceNoticeZhHant\": \"\",\r\n\r\n    \"maintenanceNoticeEn\": \"\",\r\n\r\n    \"maintenanceNoticeJa\": \"\"\r\n\r\n}");
+                    CustomSendStatus200AndNoHeader(Response, "{\r\n\r\n    \"configs\": [\r\n\r\n        {\r\n\r\n            \"version\": \"1.1.2\",\r\n\r\n            \"resourceUrl\": \"http://" + Encoding.UTF8.GetString(Convert.FromBase64String(GlobalConfig.Base64Strings.GameName)) + "assetstore." + Encoding.UTF8.GetString(Convert.FromBase64String(GlobalConfig.Base64Strings.GameCompanyName)) + ".cn/versions/v1_0_8_0\"\r\n\r\n        },\r\n\r\n        {\r\n\r\n            \"version\": \"1.1.2\",\r\n\r\n            \"resourceUrl\": \"http://" + Encoding.UTF8.GetString(Convert.FromBase64String(GlobalConfig.Base64Strings.GameName)) + "assetstore." + Encoding.UTF8.GetString(Convert.FromBase64String(GlobalConfig.Base64Strings.GameCompanyName)) + ".cn/versions/v1_0_9_0\"\r\n\r\n        }\r\n\r\n    ],\r\n\r\n    \"minimalVersion\": \"1.0.0\",\r\n\r\n    \"underMaintenance\": false,\r\n\r\n    \"maintenanceNoticeZhHans\": \"\",\r\n\r\n    \"maintenanceNoticeZhHant\": \"\",\r\n\r\n    \"maintenanceNoticeEn\": \"\",\r\n\r\n    \"maintenanceNoticeJa\": \"\"\r\n\r\n}");
                 }
                 else if (request.Url.Contains("/versions/v"))
                 {
@@ -418,22 +418,15 @@ namespace RizServerConsole
         }
     }
 
-    class HttpsCacheServer : NetCoreServer.HttpsServer
+    class HttpCacheServer : NetCoreServer.HttpServer
     {
-        public HttpsCacheServer(SslContext context, IPAddress address, int port) : base(context, address, port) { }
+        public HttpCacheServer(IPAddress address, int port) : base(address, port) { }
 
-        protected override SslSession CreateSession() { return new HttpsCacheSession(this); }
+        protected override TcpSession CreateSession() { return new HttpCacheSession(this); }
 
         protected override void OnError(SocketError error)
         {
-            if (error.ToString().Contains("NotConnected"))
-            {
-                Console.WriteLine($"HTTPS session not connected, Please check whether the client has trusted the HTTPS certificate of the corresponding server!");
-            }
-            else
-            {
-                Console.WriteLine($"HTTPS session caught an error: {error}");
-            }
+            Console.WriteLine($"HTTP session caught an error: {error}");
         }
     }
 
@@ -444,23 +437,17 @@ namespace RizServerConsole
             RizServerCoreSharp.Classes.DBMain.Init();
             RizServerCoreSharp.Classes.DBMain.InitTargetJsonFile("RizServerCoreSharp");
 
-            // HTTPS server port
-            int port = 8443;
+            // HTTP server port
+            int port = 80;
             if (args.Length > 0)
                 port = int.Parse(args[0]);
-            // HTTPS server content path
-            //string www = "../../../../../www/api";
 
-            Console.WriteLine($"RizServer HTTPS server port: {port}");
-            Console.WriteLine($"Now you can try to send a request to RizServer: https://localhost:{port}/");
+            Console.WriteLine($"Rizserver is running on port: {port}");
 
             Console.WriteLine();
 
-            // Create and prepare a new SSL server context
-            var context = new SslContext(SslProtocols.Tls12, new X509Certificate2("certs/cert.pfx", File.ReadAllText("certs/certpwd.txt")));
-
             // Create a new HTTP server
-            var server = new HttpsCacheServer(context, IPAddress.Any, port);
+            var server = new HttpCacheServer(IPAddress.Any, port);
             //server.AddStaticContent(www, "/api");
 
             // Start the server
